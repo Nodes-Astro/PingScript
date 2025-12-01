@@ -1,116 +1,95 @@
-# PingScript
-Will show you the ping logs every 20 seconds and save as log.txt file running as service.
+# Ping Logger Service
 
-### Create your  script in usr/local/bin
+Bu proje, her **20 saniyede bir** belirli bir IP adresine (varsayılan: `8.8.8.8`) ping atıp, çıkan **son 3 satırı** bir log dosyasına (`/var/log/ping_logger.log`) kaydeden bir bash script ve systemd servis dosyası içerir.
+
+Script hem manuel olarak çalıştırılabilir hem de bir **systemd servisi** olarak sistem açılışında otomatik başlatılabilir.
+
+---
+
+## 🚀 Özellikler
+- Her 20 saniyede bir ping atar  
+- Ping çıktısının sadece son 3 satırını loglar  
+- Zaman damgası ekler  
+- Log dosyasını `/var/log/` altında tutar  
+- systemd servisi olarak otomatik çalışabilir  
+- Script herkes tarafından indirilebilir ve kullanılabilir  
+
+---
+
+## 📥 Scripti İndir (Raw Link)
+
+Aşağıdaki komutla script’i direkt indirebilirsiniz:
 
 ```
-sudo mkdir -p /usr/local/bin
-sudo nano /usr/local/bin/ping_logger.sh
+wget https://raw.githubusercontent.com/Nodes-Astro/PingScript/main/ping_logger.sh -O ping_logger.sh
+chmod +x ping_logger.sh
 ```
 
-### Paste this into the editor this is our script file.
+### Manuel çalıştırmak için
 ```
-#!/bin/bash
-
-TARGET="8.8.8.8"                      # Ping atılacak adres
-LOGFILE="/var/log/ping_logger.log"    # Log dosyasının tam yolu
-
-# Log dosyası yoksa oluştur
-touch "$LOGFILE"
-
-while true; do
-  {
-    echo "====== $(date '+%Y-%m-%d %H:%M:%S') ======"
-    ping -c 4 "$TARGET" | tail -n 3
-    echo
-  } >> "$LOGFILE"
-
-  sleep 20
-done
+ ./ping_logger.sh
 ```
-#### Save and exit
 
-### Give permission and create log file
+🛠️ Systemd Servisi Olarak Kurulum
+
+Script’i sistem servisi olarak çalıştırmak için aşağıdaki adımları takip edin:
+
+1) Script’i kalıcı dizine taşı
 ```
+sudo mv ping_logger.sh /usr/local/bin/ping_logger.sh
 sudo chmod +x /usr/local/bin/ping_logger.sh
-sudo touch /var/log/ping_logger.log
 ```
-### Creaate systemd service file
 
+3) systemd servis dosyasını oluşturun
 ```
-sudo nano /etc/systemd/system/ping-logger.service
-```
-### Paste this
-```
+sudo bash -c 'cat <<EOF > /etc/systemd/system/ping-logger.service
 [Unit]
-Description=Ping logger service (8.8.8.8 her 20 saniyede bir)
+Description=Ping Logger Service
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=alperen
-Group=alperen
+User=root
 ExecStart=/usr/local/bin/ping_logger.sh
 Restart=always
 RestartSec=5
 
-# İstersen çalışma dizini:
-WorkingDirectory=/home/alperen
-
 [Install]
 WantedBy=multi-user.target
-
+EOF'
 ```
-#### Save and Exit
-
-### Notice systemd
-
+3) Servisi aktif hale getirin
 ```
 sudo systemctl daemon-reload
+sudo systemctl enable --now ping-logger.service
 ```
-### Start service and enable auto start
-```
-sudo systemctl start ping-logger.service
-sudo systemctl enable ping-logger.service
-```
+🔍 Servis Yönetim Komutları
 
-### Check system status
+Servis durumu:
 ```
 systemctl status ping-logger.service
 ```
 
-### Check logfile
-
-#### To check content
-```
-cat /var/log/ping_logger.log
-```
-
-#### To check live
-
-```
-tail -f /var/log/ping_logger.log
-```
-
-### To stop service or restart
-
-#### Stop
+Servisi durdur:
 ```
 sudo systemctl stop ping-logger.service
 ```
-#### Restart
+
+Yeniden başlat:
 ```
 sudo systemctl restart ping-logger.service
 ```
-#### To disable Auto restart 
-```
-sudo systemctl disable ping-logger.service
-```
-### To catch errors
-```
-journalctl -u ping-logger.service -xe
-```
 
-#### That's it for our script, don't hesitate for questions or any help.
+Logları canlı izle:
+```
+tail -f /var/log/ping_logger.log
+```
+📌 Notlar
+
+Script root kullanıcı ile çalıştığı için log dosyasına yazma sorunu yaşanmaz.
+
+IP adresi ve sleep süresi script içinde düzenlenebilir.
+
+systemd servisi otomatik olarak çökerse yeniden başlama özelliğine sahiptir.
 
