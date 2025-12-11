@@ -170,7 +170,7 @@ jobs:
 ```
 
 ### 🗂️ Project Structure
-
+```
 .
 ├── ping-monitor.sh
 ├── Dockerfile
@@ -178,7 +178,7 @@ jobs:
 └── .github/
     └── workflows/
         └── docker-image.yml
-
+```
 
 ### 🏁 Notes
 
