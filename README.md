@@ -1,10 +1,11 @@
-🛰️ Ping Monitoring Service
+## 🛰️ Ping Monitoring Service
+
 <p align="center"> <img src="https://img.shields.io/badge/DevOps-Ping%20Monitor-blue?style=for-the-badge"/> <br/> <img src="https://github.com/Nodes-Astro/PingScript/actions/workflows/docker-image.yml/badge.svg" /> <img src="https://img.shields.io/docker/pulls/astronodes/ping-monitor" /> <img src="https://img.shields.io/docker/image-size/astronodes/ping-monitor" /> <img src="https://img.shields.io/badge/license-MIT-green" /> </p>
 
 A lightweight ping monitoring service for both Linux (systemd) and Docker environments.
 Outputs structured JSON logs, supports configurable parameters, and ships with a full CI/CD pipeline (GitHub Actions → Docker Hub).
 
-🚀 Features
+### 🚀 Features
 
 Bash script with JSON log output
 
@@ -22,36 +23,54 @@ Lightweight Alpine image
 
 Automated CI/CD pipeline (Docker build & push)
 
-📦 Docker Usage
-Pull image
-docker pull astronodes/ping-monitor:latest
+### 📦 Docker Usage
 
-Run
+#### Pull image
+
+```
+docker pull astronodes/ping-monitor:latest
+```
+
+#### Run
+```
 docker run --rm \
   -e TARGET=8.8.8.8 \
   -e COUNT=3 \
   -e INTERVAL=20 \
   astronodes/ping-monitor:latest
+```
 
-Logs
+#### Logs
+```
 docker logs -f <container_id>
+```
 
-Example JSON
+#### Example JSON
+```
 {"timestamp":"2025-12-11T10:00:00+03:00","target":"8.8.8.8","success":true,"output":"PING 8.8.8.8 ..."}
+```
 
-⚙️ Environment Variables
-Variable	Default	Description
-TARGET	8.8.8.8	Ping target
-COUNT	3	ICMP packets per run
-INTERVAL	20	Seconds between checks
-LOG_FILE	/var/log/ping-monitor.log or stdout	Log output path
-🖥️ Systemd Setup (Linux Host)
-1️⃣ Install script
+### ⚙️ Environment Variables
+
+| Variable | Default                             | Description            |
+| -------- | ----------------------------------- | ---------------------- |
+| TARGET   | 8.8.8.8                             | Ping target            |
+| COUNT    | 3                                   | ICMP packets per run   |
+| INTERVAL | 20                                  | Seconds between checks |
+| LOG_FILE | /var/log/ping-monitor.log or stdout | Log output path        |
+
+
+
+### 🖥️ Systemd Setup (Linux Host)
+
+#### 1️⃣ Install script
+```
 sudo cp ping-monitor.sh /usr/local/bin/ping-monitor.sh
 sudo chmod +x /usr/local/bin/ping-monitor.sh
+```
 
-2️⃣ Create service
-
+#### 2️⃣ Create service
+```
 /etc/systemd/system/ping-monitor.service:
 
 [Unit]
@@ -67,9 +86,10 @@ Environment=LOG_FILE=/var/log/ping-monitor.log
 Environment=COUNT=3
 User=root
 Group=root
+```
 
-3️⃣ Create timer
-
+#### 3️⃣ Create timer
+```
 /etc/systemd/system/ping-monitor.timer:
 
 [Unit]
@@ -88,13 +108,15 @@ Enable & start:
 
 sudo systemctl daemon-reload
 sudo systemctl enable --now ping-monitor.timer
+```
 
-
-Check logs:
-
+#### Check logs:
+```
 sudo tail -n 20 /var/log/ping-monitor.log
+```
 
-🐳 Dockerfile
+### 🐳 Dockerfile
+```
 FROM alpine:3.20
 
 RUN apk add --no-cache bash iputils
@@ -110,11 +132,13 @@ ENV INTERVAL=20
 ENV LOG_FILE=""
 
 CMD ["sh", "-c", "while true; do /app/ping-monitor.sh; sleep $INTERVAL; done"]
+```
 
-🔄 GitHub Actions CI/CD
-
-.github/workflows/docker-image.yml:
-
+### 🔄 GitHub Actions CI/CD
+```
+.github/workflows/docker-image.yml
+```
+```
 name: Build and Push Docker image
 
 on:
@@ -143,8 +167,10 @@ jobs:
       - name: Push Docker image
         run: |
           docker push astronodes/ping-monitor:latest
+```
 
-🗂️ Project Structure
+### 🗂️ Project Structure
+
 .
 ├── ping-monitor.sh
 ├── Dockerfile
@@ -153,7 +179,8 @@ jobs:
     └── workflows/
         └── docker-image.yml
 
-🏁 Notes
+
+### 🏁 Notes
 
 Ideal DevOps portfolio project
 
