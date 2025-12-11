@@ -1,4 +1,4 @@
-## 🛰️ Ping Monitoring Service
+# 🛰️ Ping Monitoring Service
 
 <p align="center"> <img src="https://img.shields.io/badge/DevOps-Ping%20Monitor-blue?style=for-the-badge"/> <br/> <img src="https://github.com/Nodes-Astro/PingScript/actions/workflows/docker-image.yml/badge.svg" /> <img src="https://img.shields.io/docker/pulls/astronodes/ping-monitor" /> <img src="https://img.shields.io/docker/image-size/astronodes/ping-monitor" /> <img src="https://img.shields.io/badge/license-MIT-green" /> </p>
 
