@@ -1,95 +1,162 @@
-# Ping Logger Service
+🛰️ Ping Monitoring Service
+<p align="center"> <img src="https://img.shields.io/badge/DevOps-Ping%20Monitor-blue?style=for-the-badge"/> <br/> <img src="https://github.com/Nodes-Astro/PingScript/actions/workflows/docker-image.yml/badge.svg" /> <img src="https://img.shields.io/docker/pulls/astronodes/ping-monitor" /> <img src="https://img.shields.io/docker/image-size/astronodes/ping-monitor" /> <img src="https://img.shields.io/badge/license-MIT-green" /> </p>
 
-Bu proje, her **20 saniyede bir** belirli bir IP adresine (varsayılan: `8.8.8.8`) ping atıp, çıkan **son 3 satırı** bir log dosyasına (`/var/log/ping_logger.log`) kaydeden bir bash script ve systemd servis dosyası içerir.
+A lightweight ping monitoring service for both Linux (systemd) and Docker environments.
+Outputs structured JSON logs, supports configurable parameters, and ships with a full CI/CD pipeline (GitHub Actions → Docker Hub).
 
-Script hem manuel olarak çalıştırılabilir hem de bir **systemd servisi** olarak sistem açılışında otomatik başlatılabilir.
+🚀 Features
 
----
+Bash script with JSON log output
 
-## 🚀 Özellikler
-- Her 20 saniyede bir ping atar  
-- Ping çıktısının sadece son 3 satırını loglar  
-- Zaman damgası ekler  
-- Log dosyasını `/var/log/` altında tutar  
-- systemd servisi olarak otomatik çalışabilir  
-- Script herkes tarafından indirilebilir ve kullanılabilir  
+Runs as:
 
----
+✔️ Linux systemd service
 
-## 📥 Scripti İndir (Raw Link)
+✔️ Linux systemd timer
 
-Aşağıdaki komutla script’i direkt indirebilirsiniz:
+✔️ Docker container loop
 
-```
-wget https://raw.githubusercontent.com/Nodes-Astro/PingScript/main/ping_logger.sh -O ping_logger.sh
-chmod +x ping_logger.sh
-```
+Configurable environment variables
 
-### Manuel çalıştırmak için
-```
- ./ping_logger.sh
-```
+Lightweight Alpine image
 
-🛠️ Systemd Servisi Olarak Kurulum
+Automated CI/CD pipeline (Docker build & push)
 
-Script’i sistem servisi olarak çalıştırmak için aşağıdaki adımları takip edin:
+📦 Docker Usage
+Pull image
+docker pull astronodes/ping-monitor:latest
 
-1) Script’i kalıcı dizine taşı
-```
-sudo mv ping_logger.sh /usr/local/bin/ping_logger.sh
-sudo chmod +x /usr/local/bin/ping_logger.sh
-```
+Run
+docker run --rm \
+  -e TARGET=8.8.8.8 \
+  -e COUNT=3 \
+  -e INTERVAL=20 \
+  astronodes/ping-monitor:latest
 
-3) systemd servis dosyasını oluşturun
-```
-sudo bash -c 'cat <<EOF > /etc/systemd/system/ping-logger.service
+Logs
+docker logs -f <container_id>
+
+Example JSON
+{"timestamp":"2025-12-11T10:00:00+03:00","target":"8.8.8.8","success":true,"output":"PING 8.8.8.8 ..."}
+
+⚙️ Environment Variables
+Variable	Default	Description
+TARGET	8.8.8.8	Ping target
+COUNT	3	ICMP packets per run
+INTERVAL	20	Seconds between checks
+LOG_FILE	/var/log/ping-monitor.log or stdout	Log output path
+🖥️ Systemd Setup (Linux Host)
+1️⃣ Install script
+sudo cp ping-monitor.sh /usr/local/bin/ping-monitor.sh
+sudo chmod +x /usr/local/bin/ping-monitor.sh
+
+2️⃣ Create service
+
+/etc/systemd/system/ping-monitor.service:
+
 [Unit]
-Description=Ping Logger Service
-After=network-online.target
+Description=Ping monitoring service (single run)
 Wants=network-online.target
+After=network-online.target
 
 [Service]
-Type=simple
+Type=oneshot
+ExecStart=/usr/local/bin/ping-monitor.sh
+Environment=TARGET=8.8.8.8
+Environment=LOG_FILE=/var/log/ping-monitor.log
+Environment=COUNT=3
 User=root
-ExecStart=/usr/local/bin/ping_logger.sh
-Restart=always
-RestartSec=5
+Group=root
+
+3️⃣ Create timer
+
+/etc/systemd/system/ping-monitor.timer:
+
+[Unit]
+Description=Run ping-monitor.service every 20 seconds
+
+[Timer]
+OnUnitActiveSec=20s
+Unit=ping-monitor.service
+AccuracySec=1s
 
 [Install]
-WantedBy=multi-user.target
-EOF'
-```
-3) Servisi aktif hale getirin
-```
+WantedBy=timers.target
+
+
+Enable & start:
+
 sudo systemctl daemon-reload
-sudo systemctl enable --now ping-logger.service
-```
-🔍 Servis Yönetim Komutları
+sudo systemctl enable --now ping-monitor.timer
 
-Servis durumu:
-```
-systemctl status ping-logger.service
-```
 
-Servisi durdur:
-```
-sudo systemctl stop ping-logger.service
-```
+Check logs:
 
-Yeniden başlat:
-```
-sudo systemctl restart ping-logger.service
-```
+sudo tail -n 20 /var/log/ping-monitor.log
 
-Logları canlı izle:
-```
-tail -f /var/log/ping_logger.log
-```
-📌 Notlar
+🐳 Dockerfile
+FROM alpine:3.20
 
-Script root kullanıcı ile çalıştığı için log dosyasına yazma sorunu yaşanmaz.
+RUN apk add --no-cache bash iputils
 
-IP adresi ve sleep süresi script içinde düzenlenebilir.
+WORKDIR /app
 
-systemd servisi otomatik olarak çökerse yeniden başlama özelliğine sahiptir.
+COPY ping-monitor.sh /app/ping-monitor.sh
+RUN chmod +x /app/ping-monitor.sh
 
+ENV TARGET=8.8.8.8
+ENV COUNT=3
+ENV INTERVAL=20
+ENV LOG_FILE=""
+
+CMD ["sh", "-c", "while true; do /app/ping-monitor.sh; sleep $INTERVAL; done"]
+
+🔄 GitHub Actions CI/CD
+
+.github/workflows/docker-image.yml:
+
+name: Build and Push Docker image
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t astronodes/ping-monitor:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push astronodes/ping-monitor:latest
+
+🗂️ Project Structure
+.
+├── ping-monitor.sh
+├── Dockerfile
+├── README.md
+└── .github/
+    └── workflows/
+        └── docker-image.yml
+
+🏁 Notes
+
+Ideal DevOps portfolio project
+
+Demonstrates Bash, Docker, CI/CD, systemd, JSON logging
+
+Production-friendly, lightweight design
