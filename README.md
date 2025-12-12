@@ -180,10 +180,82 @@ jobs:
         └── docker-image.yml
 ```
 
+### 📊 Monitoring & Observability (Prometheus + Grafana)
+
+This project includes a production-like monitoring stack using Prometheus, Blackbox Exporter, and Grafana.
+
+#### Stack Overview
+
+Prometheus collects metrics
+
+Blackbox Exporter performs ICMP (ping) probes
+
+Grafana visualizes latency and availability
+
+Monitoring is deployed via Docker Compose.
+
+#### 🚀 Run Monitoring Stack
+```
+docker compose -f docker-compose.monitoring.yml up -d
+```
+
+
+#### Services:
+
+Prometheus → http://localhost:9090
+
+Grafana → http://localhost:3000
+
+Credentials: admin / admin
+
+#### 📈 Collected Metrics
+
+##### Key metrics used in dashboards:
+
+Key metrics used in dashboards:
+
+probe_success
+
+1 → target reachable
+
+0 → target unreachable
+
+probe_duration_seconds
+
+Total duration of a probe (latency + processing time)
+
+#### 🎨 Grafana Thresholds
+
+Latency thresholds are applied to probe_duration_seconds:
+
+| Latency    | Status      |
+| ---------- | ----------- |
+| < 100 ms   | 🟢 Healthy  |
+| 100–300 ms | 🟡 Degraded |
+| > 300 ms   | 🔴 Critical |
+
+
+Thresholds are configured using Absolute values and displayed in milliseconds (ms).
+
+#### 📊 Example PromQL Queries
+
+Average latency per target:
+
+```
+avg by (instance) (probe_duration_seconds)
+```
+
+Availability (uptime):
+
+```
+probe_success
+```
 ### 🏁 Notes
 
 Ideal DevOps portfolio project
 
 Demonstrates Bash, Docker, CI/CD, systemd, JSON logging
+
+Monitoring focuses on network health and latency
 
 Production-friendly, lightweight design
