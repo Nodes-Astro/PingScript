@@ -250,12 +250,3 @@ Availability (uptime):
 ```
 probe_success
 ```
-### 🏁 Notes
-
-Ideal DevOps portfolio project
-
-Demonstrates Bash, Docker, CI/CD, systemd, JSON logging
-
-Monitoring focuses on network health and latency
-
-Production-friendly, lightweight design
